@@ -124,12 +124,11 @@
             if (j == 0) {
               oCell.innerHTML = "Job<sub>" + (i + 1) + "</sub>";
             } else {
-              idval = "mac" + String(j);
+              idval = "mac" + String(i) + String(j - 1);
               readonly = false;
               oCell.innerHTML =
                 "<input type=text size=4 id=" +
                 idval +
-                i +
                 " " +
                 readonly +
                 " onkeyup=checnum(this);>";
@@ -144,227 +143,395 @@
       }
     }
 
-    Array.prototype.min = function (comparer) {
-      if (this.length === 0) return null;
-      if (this.length === 1) return this[0];
-
-      comparer = comparer || Math.min;
-
-      var v = this[0];
-      for (var i = 1; i < this.length; i++) {
-        v = comparer(this[i], v);
+    // initialize variables
+    var MAX = 50;
+    var data = new Array(MAX);
+    for (var i = 0; i < MAX; i++) {
+      data[i] = new Array(MAX);
+    }
+    var no_of_machines;
+    var no_of_jobs;
+    var sequence = new Array(MAX);
+    var sequenceMark = new Array(MAX);
+    var idleTime = new Array(MAX);
+    var inTime = new Array(MAX);
+    for (var i = 0; i < MAX; i++) {
+      inTime[i] = new Array(MAX);
+    }
+    var outTime = new Array(MAX);
+    for (var i = 0; i < MAX; i++) {
+      outTime[i] = new Array(MAX);
+    }
+    var fakeMachine = new Array(MAX);
+    for (var i = 0; i < MAX; i++) {
+      fakeMachine[i] = new Array(MAX);
+    }
+    var totalTime;
+    for (var i = 0; i < MAX; i++) {
+      sequence[i] = 0;
+      sequenceMark[i] = 0;
+      idleTime[i] = 0;
+      for (j = 0; j < MAX; j++) {
+        data[i][j] = 0;
+        inTime[i][j] = 0;
+        outTime[i][j] = 0;
+        fakeMachine[i][j] = 0;
       }
-
-      return v;
-    };
-
+    }
+    function makeFakeMachine() {
+      var i, j;
+      for (i = 0; i < no_of_jobs; i++) {
+        for (j = 0; j < no_of_machines - 1; j++) {
+          fakeMachine[0][i] = Number(fakeMachine[0][i]) + Number(data[j][i]);
+        }
+      }
+      for (i = 0; i < no_of_jobs; i++) {
+        for (j = 1; j < no_of_machines; j++) {
+          fakeMachine[1][i] = Number(fakeMachine[1][i]) + Number(data[j][i]);
+        }
+      }
+    }
+    function countTotalTime() {
+      totalTime = Number(outTime[no_of_machines - 1][no_of_jobs - 1]);
+    }
+    function countIdleTime() {
+      var i, j;
+      countTotalTime();
+      for (i = 0; i < no_of_machines; i++) {
+        idleTime[i] = Number(inTime[i][0]);
+        for (j = 1; j < no_of_jobs; j++) {
+          idleTime[i] =
+            Number(idleTime[i]) +
+            Number(inTime[i][j]) -
+            Number(outTime[i][j - 1]);
+        }
+        idleTime[i] =
+          Number(idleTime[i]) +
+          Number(totalTime) -
+          Number(outTime[i][no_of_jobs - 1]);
+      }
+    }
+    function calculateInOutTime() {
+      var i, j;
+      for (i = 0; i < no_of_machines; i++) {
+        if (i == 0) {
+          inTime[i][0] = 0;
+          outTime[i][0] = Number(data[i][sequence[0] - 1]);
+          for (j = 1; j < no_of_jobs; j++) {
+            inTime[i][j] = Number(outTime[i][j - 1]);
+            outTime[i][j] =
+              Number(data[i][sequence[j] - 1]) + Number(inTime[i][j]);
+          }
+        } else {
+          for (j = 0; j < no_of_jobs; j++) {
+            if (j == 0) {
+              inTime[i][j] = Number(outTime[i - 1][j]);
+              outTime[i][j] =
+                Number(data[i][sequence[j] - 1]) + Number(inTime[i][j]);
+            } else {
+              if (Number(outTime[i - 1][j]) < Number(outTime[i][j - 1]))
+                inTime[i][j] = Number(outTime[i][j - 1]);
+              else inTime[i][j] = Number(outTime[i - 1][j]);
+              outTime[i][j] =
+                Number(inTime[i][j]) + Number(data[i][sequence[j] - 1]);
+            }
+          }
+        }
+      }
+    }
+    function getMinValue(array, no) {
+      var min = 9999;
+      for (var i = 0; i < no; i++)
+        if (Number(sequenceMark[i]) != 1)
+          if (min > Number(array[i])) min = Number(array[i]);
+      return min;
+    }
+    function getPosition(array, start, end, value) {
+      for (var i = start; i < end; i++)
+        if (Number(sequenceMark[i]) != 1)
+          if (value == Number(array[i])) return i;
+      return -1;
+    }
+    function countValue(array, no, value) {
+      var count = 0;
+      for (var i = 0; i < no; i++)
+        if (Number(sequenceMark[i]) != 1)
+          if (value == Number(array[i])) count++;
+      return count;
+    }
+    function makeSequence(array) {
+      var i, j, minOfM1, minOfM2;
+      var pos = -1,
+        temp_pos = -1,
+        totalMin,
+        totalMin1,
+        min,
+        max;
+      var start = 0,
+        end = no_of_jobs - 1;
+      for (i = 0; i < no_of_jobs; i++) {
+        minOfM1 = getMinValue(array[0], no_of_jobs);
+        minOfM2 = getMinValue(array[1], no_of_jobs);
+        temp_pos = pos = -1;
+        if (minOfM1 < minOfM2) {
+          totalMin = countValue(array[0], no_of_jobs, minOfM1);
+          for (j = 0; j < totalMin; j++) {
+            min = 9999;
+            if (totalMin > 1) {
+              temp_pos = getPosition(
+                array[0],
+                temp_pos + 1,
+                no_of_jobs,
+                minOfM1
+              );
+              if (Number(array[1][temp_pos]) < min) {
+                min = Number(array[1][temp_pos]);
+                pos = temp_pos;
+              }
+            } else pos = getPosition(array[0], pos + 1, no_of_jobs, minOfM1);
+            sequence[start++] = pos + 1;
+            sequenceMark[pos] = 1;
+          }
+        } else if (minOfM1 > minOfM2) {
+          totalMin = countValue(array[1], no_of_jobs, minOfM2);
+          for (j = 0; j < totalMin; j++) {
+            if (totalMin > 1) {
+              max = 0;
+              for (var k = 0; k < totalMin; k++) {
+                temp_pos = getPosition(
+                  array[1],
+                  temp_pos + 1,
+                  no_of_jobs,
+                  minOfM2
+                );
+                if (Number(array[0][temp_pos]) > max) {
+                  max = Number(array[0][temp_pos]);
+                  pos = temp_pos;
+                }
+              }
+            } else pos = getPosition(array[1], pos + 1, no_of_jobs, minOfM2);
+            sequence[end--] = pos + 1;
+            sequenceMark[pos] = 1;
+          }
+        } else if (minOfM1 == minOfM2 && minOfM1 != 9999) {
+          totalMin = countValue(array[0], no_of_jobs, minOfM1);
+          totalMin1 = countValue(array[1], no_of_jobs, minOfM2);
+          for (j = 0; j < totalMin; j++) {
+            pos = getPosition(array[0], pos + 1, no_of_jobs, minOfM1);
+            sequence[start++] = pos + 1;
+            sequenceMark[pos] = 1;
+          }
+          pos = -1;
+          for (j = 0; j < totalMin1; j++) {
+            pos = getPosition(array[1], pos + 1, no_of_jobs, minOfM2);
+            if (sequenceMark[pos] == 0 && pos != -1) {
+              sequence[end--] = pos + 1;
+              sequenceMark[pos] = 1;
+            }
+          }
+        }
+      }
+    }
+    function getMax(data, row, col) {
+      var i, j;
+      var max = 0;
+      for (i = 1; i < row - 1; i++) {
+        for (j = 0; j < col; j++) {
+          if (max < Number(data[i][j])) {
+            max = Number(data[i][j]);
+          }
+        }
+      }
+      return max;
+    }
+    // var a = getMax(data, 3, 5);
+    // console.log(a);
     function sequencing_problem() {
+      no_of_machines = 0;
+      no_of_jobs = 0;
+      totalTime = 0;
+      for (var i = 0; i < MAX; i++) {
+        sequence[i] = 0;
+        sequenceMark[i] = 0;
+        idleTime[i] = 0;
+        for (j = 0; j < MAX; j++) {
+          data[i][j] = 0;
+          inTime[i][j] = 0;
+          outTime[i][j] = 0;
+          fakeMachine[i][j] = 0;
+        }
+      }
       document.getElementById("t").innerHTML = "";
-      var sufi;
       var nac = $("#nac").val();
-
-      if (nac == "") {
-        alert("Enter Number of Jobs");
+      var mac = $("#mac").val();
+      if (nac == "" || mac == "") {
+        alert("Enter Values");
         $("#nac").focus();
         document.getElementById("mktbl").innerHTML = "";
         document.getElementById("t").innerHTML = "";
         return false;
       } else {
-        var macA = new Array();
-        var macB = new Array();
-        var temA = new Array();
-        var temB = new Array();
-        var tempA = new Array();
-        var tempB = new Array();
-        for (i = 0; i < nac; i++) {
-          var firs = $("#ma" + i).val();
-          var secs = $("#mb" + i).val();
-          if (firs == "" || secs == "") {
-            alert("Enter all values in field");
-            return false;
-          } else {
-            macA[i] = parseFloat(firs);
-            macB[i] = parseFloat(secs);
-            temA[i] = macA[i];
-            temB[i] = macB[i];
-            tempA[i] = macA[i];
-            tempB[i] = macB[i];
-          }
-        }
-
-        var jobs = new Array();
-        var mina;
-        var minb;
-        var ind;
-        var main = 0;
-        var mbin = nac - 1;
-        for (j = 0; j < nac; j++) {
-          mina = temA.min();
-          minb = temB.min();
-          if (mina <= minb) {
-            ind = temA.indexOf(mina);
-            temA.splice(ind, 1);
-            temB.splice(ind, 1);
-            jobs[main] = tempA.indexOf(mina);
-            tempA[jobs[main]] = "";
-            tempB[jobs[main]] = "";
-            main++;
-          } else {
-            ind = temB.indexOf(minb);
-            temA.splice(ind, 1);
-            temB.splice(ind, 1);
-            jobs[mbin] = tempB.indexOf(minb);
-            tempA[jobs[mbin]] = "";
-            tempB[jobs[mbin]] = "";
-            mbin--;
-          }
-        }
-
-        var mac1in = new Array();
-        var mac1out = new Array();
-        var mac2in = new Array();
-        var mac2out = new Array();
-        var maxi;
-        var sum;
-        for (k = 0; k < nac; k++) {
-          if (k == 0) {
-            mac1in[k] = 0;
-            mac1out[k] = macA[jobs[k]];
-            mac2in[k] = mac1out[k];
-            mac2out[k] = parseFloat(mac2in[k]) + parseFloat(macB[jobs[k]]);
-            sum = mac2in[k];
-          } else {
-            mac1in[k] = mac1out[k - 1];
-            mac1out[k] = parseFloat(mac1in[k]) + parseFloat(macA[jobs[k]]);
-            if (mac1out[k] >= mac2out[k - 1]) {
-              maxi = mac1out[k];
-            } else {
-              maxi = mac2out[k - 1];
-            }
-            mac2in[k] = maxi;
-            mac2out[k] = parseFloat(maxi) + parseFloat(macB[jobs[k]]);
-            sum = parseFloat(sum) + parseFloat(mac2in[k] - mac2out[k - 1]);
-          }
-        }
-        var macAidle = mac2out[nac - 1] - mac1out[nac - 1];
-        var macBidle = sum;
-
-        // Declare variables and create the header, footer, and caption.
-        var oTable = document.createElement("TABLE");
-        var oTHead = document.createElement("THEAD");
-        var oTBody = document.createElement("TBODY");
-        var oRow, oCell;
         var i, j;
-
-        // Declare stock data that would normally be read in from a stock Web site.
-        var heading = new Array();
-
-        heading[0] = "Jobs";
-        heading[1] = "Machine A";
-        heading[2] = "Machine B";
-
-        // Insert the created elements into oTable.
-        oTable.appendChild(oTHead);
-        oTable.appendChild(oTBody);
-
-        // Insert a row into the header and set its background color.
-        oRow = document.createElement("TR");
-        oTHead.appendChild(oRow);
-
-        // Create and insert cells into the header row.
-        for (a = 0; a < heading.length; a++) {
-          oCell = document.createElement("TH");
-          if (a != 0) {
-            oCell.setAttribute("colspan", 2);
-          } else {
-            oCell.setAttribute("rowspan", 2);
-          }
-          oCell.innerHTML = heading[a];
-          oRow.appendChild(oCell);
-        }
-
-        // Insert a row into the header and set its background color.
-        oRow = document.createElement("TR");
-        oTHead.appendChild(oRow);
-
-        // Create and insert cells into the header row.
-        for (a = 0; a < 4; a++) {
-          oCell = document.createElement("TH");
-          if (a % 2 == 0) {
-            headval = "In";
-          } else {
-            headval = "Out";
-          }
-          oCell.innerHTML = headval;
-          oRow.appendChild(oCell);
-        }
-
-        oRow = document.createElement("TR");
-        oTBody.appendChild(oRow);
-        oCell = document.createElement("TD");
-        oCell.setAttribute("colspan", 5);
-        oCell.innerHTML = "&nbsp;";
-        oRow.appendChild(oCell);
-
-        var idval;
-        var vali;
-        // Insert rows and cells into bodies.
+        console.log("-----------------");
         for (i = 0; i < nac; i++) {
-          oRow = document.createElement("TR");
-          oRow.setAttribute("align", "center");
-          oTBody.appendChild(oRow);
-          for (j = 0; j < 5; j++) {
-            oCell = document.createElement("TD");
-            if (j == 0) {
-              oCell.innerHTML =
-                "Job<sub>" + (parseFloat(jobs[i]) + 1) + "</sub>";
-            } else if (j == 1) {
-              oCell.innerHTML = mac1in[i];
-            } else if (j == 2) {
-              oCell.innerHTML = mac1out[i];
-            } else if (j == 3) {
-              oCell.innerHTML = mac2in[i];
-            } else if (j == 4) {
-              oCell.innerHTML = mac2out[i];
-            }
-            oRow.appendChild(oCell);
+          for (j = 0; j < mac; j++) {
+            data[i][j] = $("#mac" + i + j).val();
+            console.log(data[i][j]);
           }
         }
-
-        oRow = document.createElement("TR");
-        oTBody.appendChild(oRow);
-        oCell = document.createElement("TD");
-        oCell.setAttribute("colspan", 5);
-        oCell.setAttribute("align", "center");
-        oCell.innerHTML = "Total Elapsed Time is " + mac2out[nac - 1];
-        oRow.appendChild(oCell);
-
-        oRow = document.createElement("TR");
-        oTBody.appendChild(oRow);
-        oCell = document.createElement("TD");
-        oCell.setAttribute("colspan", 5);
-        oCell.setAttribute("align", "center");
-        oCell.innerHTML = "Idle Time of Machine A is " + macAidle;
-        oRow.appendChild(oCell);
-
-        oRow = document.createElement("TR");
-        oTBody.appendChild(oRow);
-        oCell = document.createElement("TD");
-        oCell.setAttribute("colspan", 5);
-        oCell.setAttribute("align", "center");
-        oCell.innerHTML = "Idle Time of Machine B is " + macBidle;
-        oRow.appendChild(oCell);
-
-        // Insert the table into the document tree.
-        var frtb = document.getElementById("t");
-        frtb.appendChild(oTable);
+        console.log("-----------------");
+        no_of_jobs = nac;
+        no_of_machines = mac;
+        if (no_of_machines > 2) {
+          var minM1 = getMinValue(data[0], no_of_jobs);
+          var maxMM_1 = getMax(data, no_of_machines, no_of_jobs);
+          var minMM = getMinValue(data[no_of_machines - 1], no_of_jobs);
+          if (minM1 >= maxMM_1 || minMM >= maxMM_1) {
+            makeFakeMachine();
+            makeSequence(fakeMachine);
+          } else {
+            alert("NOTE: Solution Can Not possible Sorry...!!!");
+            clear_all();
+          }
+        } else makeSequence(data);
+        // displaySequence();
+        calculateInOutTime();
+        console.log("\nsequence\t");
+        for (i = 0; i < no_of_machines; i++)
+          console.log("Machine ", i + 1, " Time");
+        for (i = 0; i < no_of_machines; i++) console.log(" In out");
+        for (i = 0; i < no_of_jobs; i++) {
+          console.log(sequence[i]);
+          for (j = 0; j < no_of_machines; j++)
+            console.log(inTime[j][i], outTime[j][i]);
+        }
+        countIdleTime();
+        console.log("Total elapsed time :", totalTime);
+        for (i = 0; i < no_of_machines; i++)
+          console.log("Total Idle Time for Machine ", i + 1, " :", idleTime[i]);
       }
+
+      /////////////////////////////////////////////////
+      /////////////////////////////////////////////////
+      /////////////////////////////////////////////////
+
+      //     // Declare variables and create the header, footer, and caption.
+      //     var oTable = document.createElement("TABLE");
+      //     var oTHead = document.createElement("THEAD");
+      //     var oTBody = document.createElement("TBODY");
+      //     var oRow, oCell;
+      //     var i, j;
+
+      //     // Declare stock data that would normally be read in from a stock Web site.
+      //     var heading = new Array();
+
+      //     heading[0] = "Jobs";
+      //     heading[1] = "Machine A";
+      //     heading[2] = "Machine B";
+
+      //     // Insert the created elements into oTable.
+      //     oTable.appendChild(oTHead);
+      //     oTable.appendChild(oTBody);
+
+      //     // Insert a row into the header and set its background color.
+      //     oRow = document.createElement("TR");
+      //     oTHead.appendChild(oRow);
+
+      //     // Create and insert cells into the header row.
+      //     for (a = 0; a < heading.length; a++) {
+      //       oCell = document.createElement("TH");
+      //       if (a != 0) {
+      //         oCell.setAttribute("colspan", 2);
+      //       } else {
+      //         oCell.setAttribute("rowspan", 2);
+      //       }
+      //       oCell.innerHTML = heading[a];
+      //       oRow.appendChild(oCell);
+      //     }
+
+      //     // Insert a row into the header and set its background color.
+      //     oRow = document.createElement("TR");
+      //     oTHead.appendChild(oRow);
+
+      //     // Create and insert cells into the header row.
+      //     for (a = 0; a < 4; a++) {
+      //       oCell = document.createElement("TH");
+      //       if (a % 2 == 0) {
+      //         headval = "In";
+      //       } else {
+      //         headval = "Out";
+      //       }
+      //       oCell.innerHTML = headval;
+      //       oRow.appendChild(oCell);
+      //     }
+
+      //     oRow = document.createElement("TR");
+      //     oTBody.appendChild(oRow);
+      //     oCell = document.createElement("TD");
+      //     oCell.setAttribute("colspan", 5);
+      //     oCell.innerHTML = "&nbsp;";
+      //     oRow.appendChild(oCell);
+
+      //     var idval;
+      //     var vali;
+      //     // Insert rows and cells into bodies.
+      //     for (i = 0; i < nac; i++) {
+      //       oRow = document.createElement("TR");
+      //       oRow.setAttribute("align", "center");
+      //       oTBody.appendChild(oRow);
+      //       for (j = 0; j < 5; j++) {
+      //         oCell = document.createElement("TD");
+      //         if (j == 0) {
+      //           oCell.innerHTML =
+      //             "Job<sub>" + (parseFloat(jobs[i]) + 1) + "</sub>";
+      //         } else if (j == 1) {
+      //           oCell.innerHTML = mac1in[i];
+      //         } else if (j == 2) {
+      //           oCell.innerHTML = mac1out[i];
+      //         } else if (j == 3) {
+      //           oCell.innerHTML = mac2in[i];
+      //         } else if (j == 4) {
+      //           oCell.innerHTML = mac2out[i];
+      //         }
+      //         oRow.appendChild(oCell);
+      //       }
+      //     }
+
+      //     oRow = document.createElement("TR");
+      //     oTBody.appendChild(oRow);
+      //     oCell = document.createElement("TD");
+      //     oCell.setAttribute("colspan", 5);
+      //     oCell.setAttribute("align", "center");
+      //     oCell.innerHTML = "Total Elapsed Time is " + mac2out[nac - 1];
+      //     oRow.appendChild(oCell);
+
+      //     oRow = document.createElement("TR");
+      //     oTBody.appendChild(oRow);
+      //     oCell = document.createElement("TD");
+      //     oCell.setAttribute("colspan", 5);
+      //     oCell.setAttribute("align", "center");
+      //     oCell.innerHTML = "Idle Time of Machine A is " + macAidle;
+      //     oRow.appendChild(oCell);
+
+      //     oRow = document.createElement("TR");
+      //     oTBody.appendChild(oRow);
+      //     oCell = document.createElement("TD");
+      //     oCell.setAttribute("colspan", 5);
+      //     oCell.setAttribute("align", "center");
+      //     oCell.innerHTML = "Idle Time of Machine B is " + macBidle;
+      //     oRow.appendChild(oCell);
+
+      //     // Insert the table into the document tree.
+      //     var frtb = document.getElementById("t");
+      //     frtb.appendChild(oTable);
+      //   }
     }
 
     function clear_all() {
       document.getElementById("mktbl").innerHTML = "";
       document.getElementById("t").innerHTML = "";
       $("#nac").val("");
+      $("#mac").val("");
     }
   </script>
 </html>

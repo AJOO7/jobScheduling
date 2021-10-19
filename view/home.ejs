@@ -24,9 +24,13 @@
         <div id="dispCalcConts">
           <div class="group clearfix">
             <label>Number of Jobs</label>
+            <input type="text" id="nac" onkeyup="checnum(this);" />
+          </div>
+          <div class="group clearfix">
+            <label>Number of Machines</label>
             <input
               type="text"
-              id="nac"
+              id="mac"
               onkeyup="checnum(this);tabls_creation();"
             />
           </div>
@@ -62,17 +66,23 @@
     }
 
     function tabls_creation() {
+      // if something is already present then make it reset
       document.getElementById("mktbl").innerHTML = "";
       document.getElementById("t").innerHTML = "";
-      if ($("#nac").val() == "") {
+      //   if no of jobs is empty then this
+      if ($("#nac").val() == "" || $("#mac").val() == "") {
         document.getElementById("mktbl").innerHTML = "";
         document.getElementById("t").innerHTML = "";
-      } else if (parseFloat($("#nac").val()) > 50) {
-        alert("Number of Jobs limit should be less than 50");
+      } else if (
+        parseFloat($("#nac").val()) > 50 ||
+        parseFloat($("#mac").val()) > 50
+      ) {
+        alert("Jobs and Machine are out of limit");
         $("#nac").val("");
+        $("#mac").val("");
       } else {
         var nac = parseFloat($("#nac").val());
-
+        var mac = parseFloat($("#mac").val());
         // Declare variables and create the header, footer, and caption.
         var oTable = document.createElement("TABLE");
         var oTHead = document.createElement("THEAD");
@@ -84,8 +94,9 @@
         var heading = new Array();
 
         heading[0] = "Jobs";
-        heading[1] = "Machine A";
-        heading[2] = "Machine B";
+        for (i = 1; i <= mac; i++) {
+          heading[i] = "Machine " + String(i);
+        }
 
         // Insert the created elements into oTable.
         oTable.appendChild(oTHead);
@@ -96,33 +107,25 @@
         oTHead.appendChild(oRow);
 
         // Create and insert cells into the header row.
-        for (a = 0; a < heading.length; a++) {
+        for (a = 0; a <= mac; a++) {
           oCell = document.createElement("TH");
           oCell.innerHTML = heading[a];
           oRow.appendChild(oCell);
         }
 
         var idval;
-        var vali;
         // Insert rows and cells into bodies.
         for (i = 0; i < nac; i++) {
           oRow = document.createElement("TR");
           oRow.setAttribute("align", "center");
           oTBody.appendChild(oRow);
-          for (j = 0; j < heading.length; j++) {
+          for (j = 0; j <= mac; j++) {
             oCell = document.createElement("TD");
             if (j == 0) {
               oCell.innerHTML = "Job<sub>" + (i + 1) + "</sub>";
             } else {
-              if (j == 1) {
-                idval = "ma";
-                readonly = false;
-                vali = "";
-              } else if (j == 2) {
-                idval = "mb";
-                readonly = false;
-                vali = "onkeyup=checnum(this);";
-              }
+              idval = "mac" + String(j);
+              readonly = false;
               oCell.innerHTML =
                 "<input type=text size=4 id=" +
                 idval +

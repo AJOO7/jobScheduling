@@ -1,0 +1,19 @@
+body {
+    /* background-color: black; */
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+        url("../../assets/images/depositphotos_107294358-stock-illustration-seamless-background-with-simple-icons.jpg");
+    background-size: 30%;
+    background-repeat: repeat;
+}
+
+.jobCalculator {
+    margin: 40px 60px;
+    padding: 25px;
+    background-color: white;
+    border-radius: 10px;
+}
+
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}

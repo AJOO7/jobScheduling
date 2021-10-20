@@ -346,6 +346,12 @@
     }
     // var a = getMax(data, 3, 5);
     // console.log(a);
+    function displaySequence() {
+      console.log("sequence: ");
+      for (var i = 0; i < no_of_jobs; i++) {
+        console.log(sequence[i]);
+      }
+    }
     function sequencing_problem() {
       no_of_machines = 0;
       no_of_jobs = 0;
@@ -376,7 +382,7 @@
         for (i = 0; i < nac; i++) {
           for (j = 0; j < mac; j++) {
             data[i][j] = $("#mac" + i + j).val();
-            console.log(data[i][j]);
+            // console.log(data[i][j]);
           }
         }
         console.log("-----------------");
@@ -394,137 +400,128 @@
             clear_all();
           }
         } else makeSequence(data);
-        // displaySequence();
+        displaySequence();
         calculateInOutTime();
-        console.log("\nsequence\t");
-        for (i = 0; i < no_of_machines; i++)
-          console.log("Machine ", i + 1, " Time");
-        for (i = 0; i < no_of_machines; i++) console.log(" In out");
-        for (i = 0; i < no_of_jobs; i++) {
-          console.log(sequence[i]);
-          for (j = 0; j < no_of_machines; j++)
-            console.log(inTime[j][i], outTime[j][i]);
-        }
+        // console.log("\nsequence\t");
+        // for (i = 0; i < no_of_machines; i++)
+        //   console.log("Machine ", i + 1, " Time");
+        // for (i = 0; i < no_of_machines; i++) console.log(" In out");
+        // for (i = 0; i < no_of_jobs; i++) {
+        //   console.log(sequence[i]);
+        //   for (j = 0; j < no_of_machines; j++)
+        // console.log(inTime[j][i], outTime[j][i])
+        // }
         countIdleTime();
-        console.log("Total elapsed time :", totalTime);
-        for (i = 0; i < no_of_machines; i++)
-          console.log("Total Idle Time for Machine ", i + 1, " :", idleTime[i]);
+        // console.log("Total elapsed time :", totalTime);
+        // for (i = 0; i < no_of_machines; i++)
+        //   console.log("Total Idle Time for Machine ", i + 1, " :", idleTime[i]);
+
+        /////////////////////////////////////////////////
+        /////////////////////////////////////////////////
+        /////////////////////////////////////////////////
+
+        // Declare variables and create the header, footer, and caption.
+        var oTable = document.createElement("TABLE");
+        var oTHead = document.createElement("THEAD");
+        var oTBody = document.createElement("TBODY");
+        var oRow, oCell;
+        var i, j;
+
+        // Declare stock data that would normally be read in from a stock Web site.
+        var heading = new Array();
+
+        heading[0] = "Jobs";
+        for (i = 1; i <= mac + 1; i++) {
+          heading[i] = "Machine " + String(i);
+        }
+
+        // Insert the created elements into oTable.
+        oTable.appendChild(oTHead);
+        oTable.appendChild(oTBody);
+
+        // Insert a row into the header and set its background color.
+        oRow = document.createElement("TR");
+        oTHead.appendChild(oRow);
+
+        // Create and insert cells into the header row.
+        for (a = 0; a <= mac; a++) {
+          oCell = document.createElement("TH");
+          if (a != 0) {
+            oCell.setAttribute("colspan", 2);
+          } else {
+            oCell.setAttribute("rowspan", 2);
+          }
+          oCell.innerHTML = heading[a];
+          oRow.appendChild(oCell);
+        }
+
+        // Insert a row into the header and set its background color.
+        oRow = document.createElement("TR");
+        oTHead.appendChild(oRow);
+
+        // Create and insert cells into the header row.
+        for (a = 0; a < 2 * mac; a++) {
+          oCell = document.createElement("TH");
+          if (a % 2 == 0) {
+            headval = "In";
+          } else {
+            headval = "Out";
+          }
+          oCell.innerHTML = headval;
+          oRow.appendChild(oCell);
+        }
+
+        oRow = document.createElement("TR");
+        oTBody.appendChild(oRow);
+        oCell = document.createElement("TD");
+        oCell.setAttribute("colspan", 5);
+        oCell.innerHTML = "&nbsp;";
+        oRow.appendChild(oCell);
+
+        // Insert rows and cells into bodies.
+        for (i = 0; i < nac; i++) {
+          oRow = document.createElement("TR");
+          oRow.setAttribute("align", "center");
+          oTBody.appendChild(oRow);
+          for (j = 0; j <= mac; j++) {
+            if (j == 0) {
+              oCell = document.createElement("TD");
+              oCell.innerHTML = "Job<sub>" + sequence[i] + "</sub>";
+              oRow.appendChild(oCell);
+              continue;
+            }
+            oCellIn = document.createElement("TD");
+            oCellOut = document.createElement("TD");
+            oCellIn.innerHTML = inTime[j - 1][i];
+            oCellOut.innerHTML = outTime[j - 1][i];
+            oRow.appendChild(oCellIn);
+            oRow.appendChild(oCellOut);
+          }
+        }
+
+        oRow = document.createElement("TR");
+        oTBody.appendChild(oRow);
+        oCell = document.createElement("TD");
+        oCell.setAttribute("colspan", 5);
+        oCell.setAttribute("align", "center");
+        oCell.innerHTML = "Total Elapsed Time is " + totalTime;
+        oRow.appendChild(oCell);
+
+        for (var i = 1; i <= mac; i++) {
+          oRow = document.createElement("TR");
+          oTBody.appendChild(oRow);
+          oCell = document.createElement("TD");
+          oCell.setAttribute("colspan", 5);
+          oCell.setAttribute("align", "center");
+          oCell.innerHTML =
+            "Idle Time of Machine " + i + " " + " is " + idleTime[i - 1];
+          oRow.appendChild(oCell);
+        }
+
+        // Insert the table into the document tree.
+        var frtb = document.getElementById("t");
+        frtb.appendChild(oTable);
       }
-
-      /////////////////////////////////////////////////
-      /////////////////////////////////////////////////
-      /////////////////////////////////////////////////
-
-      //     // Declare variables and create the header, footer, and caption.
-      //     var oTable = document.createElement("TABLE");
-      //     var oTHead = document.createElement("THEAD");
-      //     var oTBody = document.createElement("TBODY");
-      //     var oRow, oCell;
-      //     var i, j;
-
-      //     // Declare stock data that would normally be read in from a stock Web site.
-      //     var heading = new Array();
-
-      //     heading[0] = "Jobs";
-      //     heading[1] = "Machine A";
-      //     heading[2] = "Machine B";
-
-      //     // Insert the created elements into oTable.
-      //     oTable.appendChild(oTHead);
-      //     oTable.appendChild(oTBody);
-
-      //     // Insert a row into the header and set its background color.
-      //     oRow = document.createElement("TR");
-      //     oTHead.appendChild(oRow);
-
-      //     // Create and insert cells into the header row.
-      //     for (a = 0; a < heading.length; a++) {
-      //       oCell = document.createElement("TH");
-      //       if (a != 0) {
-      //         oCell.setAttribute("colspan", 2);
-      //       } else {
-      //         oCell.setAttribute("rowspan", 2);
-      //       }
-      //       oCell.innerHTML = heading[a];
-      //       oRow.appendChild(oCell);
-      //     }
-
-      //     // Insert a row into the header and set its background color.
-      //     oRow = document.createElement("TR");
-      //     oTHead.appendChild(oRow);
-
-      //     // Create and insert cells into the header row.
-      //     for (a = 0; a < 4; a++) {
-      //       oCell = document.createElement("TH");
-      //       if (a % 2 == 0) {
-      //         headval = "In";
-      //       } else {
-      //         headval = "Out";
-      //       }
-      //       oCell.innerHTML = headval;
-      //       oRow.appendChild(oCell);
-      //     }
-
-      //     oRow = document.createElement("TR");
-      //     oTBody.appendChild(oRow);
-      //     oCell = document.createElement("TD");
-      //     oCell.setAttribute("colspan", 5);
-      //     oCell.innerHTML = "&nbsp;";
-      //     oRow.appendChild(oCell);
-
-      //     var idval;
-      //     var vali;
-      //     // Insert rows and cells into bodies.
-      //     for (i = 0; i < nac; i++) {
-      //       oRow = document.createElement("TR");
-      //       oRow.setAttribute("align", "center");
-      //       oTBody.appendChild(oRow);
-      //       for (j = 0; j < 5; j++) {
-      //         oCell = document.createElement("TD");
-      //         if (j == 0) {
-      //           oCell.innerHTML =
-      //             "Job<sub>" + (parseFloat(jobs[i]) + 1) + "</sub>";
-      //         } else if (j == 1) {
-      //           oCell.innerHTML = mac1in[i];
-      //         } else if (j == 2) {
-      //           oCell.innerHTML = mac1out[i];
-      //         } else if (j == 3) {
-      //           oCell.innerHTML = mac2in[i];
-      //         } else if (j == 4) {
-      //           oCell.innerHTML = mac2out[i];
-      //         }
-      //         oRow.appendChild(oCell);
-      //       }
-      //     }
-
-      //     oRow = document.createElement("TR");
-      //     oTBody.appendChild(oRow);
-      //     oCell = document.createElement("TD");
-      //     oCell.setAttribute("colspan", 5);
-      //     oCell.setAttribute("align", "center");
-      //     oCell.innerHTML = "Total Elapsed Time is " + mac2out[nac - 1];
-      //     oRow.appendChild(oCell);
-
-      //     oRow = document.createElement("TR");
-      //     oTBody.appendChild(oRow);
-      //     oCell = document.createElement("TD");
-      //     oCell.setAttribute("colspan", 5);
-      //     oCell.setAttribute("align", "center");
-      //     oCell.innerHTML = "Idle Time of Machine A is " + macAidle;
-      //     oRow.appendChild(oCell);
-
-      //     oRow = document.createElement("TR");
-      //     oTBody.appendChild(oRow);
-      //     oCell = document.createElement("TD");
-      //     oCell.setAttribute("colspan", 5);
-      //     oCell.setAttribute("align", "center");
-      //     oCell.innerHTML = "Idle Time of Machine B is " + macBidle;
-      //     oRow.appendChild(oCell);
-
-      //     // Insert the table into the document tree.
-      //     var frtb = document.getElementById("t");
-      //     frtb.appendChild(oTable);
-      //   }
     }
 
     function clear_all() {

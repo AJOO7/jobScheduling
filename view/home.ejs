@@ -124,7 +124,7 @@
             if (j == 0) {
               oCell.innerHTML = "Job<sub>" + (i + 1) + "</sub>";
             } else {
-              idval = "mac" + String(i) + String(j - 1);
+              idval = "mac" + String(j - 1) + String(i);
               readonly = false;
               oCell.innerHTML =
                 "<input type=text size=4 id=" +
@@ -179,14 +179,13 @@
       }
     }
     function makeFakeMachine() {
-      var i, j;
-      for (i = 0; i < no_of_jobs; i++) {
-        for (j = 0; j < no_of_machines - 1; j++) {
+      for (var i = 0; i < no_of_jobs; i++) {
+        for (var j = 0; j < no_of_machines - 1; j++) {
           fakeMachine[0][i] = Number(fakeMachine[0][i]) + Number(data[j][i]);
         }
       }
-      for (i = 0; i < no_of_jobs; i++) {
-        for (j = 1; j < no_of_machines; j++) {
+      for (var i = 0; i < no_of_jobs; i++) {
+        for (var j = 1; j < no_of_machines; j++) {
           fakeMachine[1][i] = Number(fakeMachine[1][i]) + Number(data[j][i]);
         }
       }
@@ -195,11 +194,10 @@
       totalTime = Number(outTime[no_of_machines - 1][no_of_jobs - 1]);
     }
     function countIdleTime() {
-      var i, j;
       countTotalTime();
-      for (i = 0; i < no_of_machines; i++) {
+      for (var i = 0; i < no_of_machines; i++) {
         idleTime[i] = Number(inTime[i][0]);
-        for (j = 1; j < no_of_jobs; j++) {
+        for (var j = 1; j < no_of_jobs; j++) {
           idleTime[i] =
             Number(idleTime[i]) +
             Number(inTime[i][j]) -
@@ -212,18 +210,17 @@
       }
     }
     function calculateInOutTime() {
-      var i, j;
-      for (i = 0; i < no_of_machines; i++) {
+      for (var i = 0; i < no_of_machines; i++) {
         if (i == 0) {
           inTime[i][0] = 0;
           outTime[i][0] = Number(data[i][sequence[0] - 1]);
-          for (j = 1; j < no_of_jobs; j++) {
+          for (var j = 1; j < no_of_jobs; j++) {
             inTime[i][j] = Number(outTime[i][j - 1]);
             outTime[i][j] =
               Number(data[i][sequence[j] - 1]) + Number(inTime[i][j]);
           }
         } else {
-          for (j = 0; j < no_of_jobs; j++) {
+          for (var j = 0; j < no_of_jobs; j++) {
             if (j == 0) {
               inTime[i][j] = Number(outTime[i - 1][j]);
               outTime[i][j] =
@@ -379,8 +376,8 @@
       } else {
         var i, j;
         console.log("-----------------");
-        for (i = 0; i < nac; i++) {
-          for (j = 0; j < mac; j++) {
+        for (i = 0; i < mac; i++) {
+          for (j = 0; j < nac; j++) {
             data[i][j] = $("#mac" + i + j).val();
             // console.log(data[i][j]);
           }

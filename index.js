@@ -1,7 +1,7 @@
 //begining 
 const express = require('express');
 const app = express();
-const port = 8000;
+const port = process.env.PORT;
 
 app.use(express.urlencoded());
 const path = require('path');
